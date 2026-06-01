@@ -25,7 +25,7 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Left Panel: Data Input + Dataset + Bulk Paste -->
+            <!-- Left Panel -->
             <div class="lg:col-span-5 space-y-6">
                 <!-- Add Single Observation -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -55,10 +55,10 @@
                     </form>
                 </div>
 
-                <!-- Bulk Paste Dataset -->
+                <!-- Bulk Paste -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <h2 class="font-semibold text-lg text-slate-900 mb-3">Bulk Paste Dataset</h2>
-                    <p class="text-xs text-slate-500 mb-3">Format: <code class="bg-slate-100 px-1 rounded">A,B,Probability</code> (one per line) or JSON</p>
+                    <p class="text-xs text-slate-500 mb-3">Format: <code>A,B,Probability</code> — one per line</p>
                     <textarea id="bulkPaste" rows="6"
                               class="block w-full rounded-2xl border border-slate-200 p-4 text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
                               placeholder="0.1,0.9,0.05
@@ -66,27 +66,17 @@
 0.5,0.5,0.48
 0.3,0.7,0.25"></textarea>
                     <div class="flex gap-3 mt-3">
-                        <button id="loadBulkBtn"
-                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-2xl text-sm transition-all">
-                            LOAD & REPLACE DATASET
-                        </button>
-                        <button id="appendBulkBtn"
-                                class="flex-1 bg-slate-700 hover:bg-slate-800 text-white font-medium py-3 rounded-2xl text-sm transition-all">
-                            APPEND TO DATASET
-                        </button>
+                        <button id="loadBulkBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-2xl text-sm">REPLACE</button>
+                        <button id="appendBulkBtn" class="flex-1 bg-slate-700 hover:bg-slate-800 text-white font-medium py-3 rounded-2xl text-sm">APPEND</button>
                     </div>
                 </div>
 
-                <!-- Current Dataset -->
+                <!-- Dataset -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-semibold text-slate-900">Training Dataset <span id="datasetSize" class="text-blue-600">(5)</span></h3>
-                        <button id="clearDatasetBtn" 
-                                class="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1">
-                            CLEAR ALL
-                        </button>
+                        <button id="clearDatasetBtn" class="text-xs text-rose-600 hover:text-rose-700 font-medium">CLEAR ALL</button>
                     </div>
-                    
                     <div class="border border-slate-100 rounded-2xl overflow-hidden max-h-64 overflow-y-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-slate-50 sticky top-0">
@@ -102,70 +92,64 @@
                 </div>
             </div>
 
-            <!-- Right Panel: Training + Inference -->
+            <!-- Right Panel -->
             <div class="lg:col-span-7 space-y-6">
-                <!-- Training Configuration -->
+                <!-- Training -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <h2 class="font-semibold text-lg text-slate-900 mb-4">Training Configuration</h2>
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">TARGET EPOCHS (Faster)</label>
-                            <input type="number" id="iterationsInput" value="4500" 
-                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                            <label class="block text-xs font-medium text-slate-500 mb-1">EPOCHS</label>
+                            <input type="number" id="iterationsInput" value="3000" class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-500 mb-1">ERROR THRESHOLD</label>
-                            <input type="number" id="errorThreshInput" value="0.003" step="0.001" 
-                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                            <input type="number" id="errorThreshInput" value="0.005" step="0.001" class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
                         </div>
                     </div>
 
-                    <!-- Progress -->
                     <div class="mt-6 space-y-3">
                         <div class="flex justify-between text-xs">
-                            <span id="progressCount" class="font-medium text-slate-500">Epochs: 0 / 4500</span>
+                            <span id="progressCount" class="font-medium text-slate-500">Epochs: 0 / 3000</span>
                             <span id="progressPercent" class="font-semibold text-blue-600">0%</span>
                         </div>
-                        <div class="h-2 bg-slate-100 rounded-3xl overflow-hidden">
-                            <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 w-0 transition-all duration-200"></div>
+                        <div class="h-2.5 bg-slate-100 rounded-3xl overflow-hidden">
+                            <div id="progressBar" class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 w-0 transition-all duration-150"></div>
                         </div>
-                        <div class="flex justify-between text-xs font-mono text-slate-400">
+                        <div class="flex justify-between text-xs font-mono">
                             <span id="currentLoss">Loss: —</span>
-                            <span id="firebaseStatus">Sync: Ready</span>
+                            <span id="firebaseStatus" class="text-emerald-600">Ready</span>
                         </div>
                     </div>
 
                     <button id="trainBtn"
                             class="mt-6 w-full bg-blue-600 hover:bg-blue-700 py-4 text-white font-semibold rounded-2xl text-sm transition-all active:scale-95 flex items-center justify-center gap-2">
-                        TRAIN NEURAL NETWORK + UPLOAD
+                        <span id="trainText">TRAIN MODEL</span>
                     </button>
                 </div>
 
                 <!-- Inference -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h2 class="font-semibold text-lg text-slate-900 mb-4">Run Inference</h2>
-                    
+                    <h2 class="font-semibold text-lg text-slate-900 mb-4">Inference</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-slate-500 mb-1">METRIC A</label>
-                            <input type="number" id="testA" value="0.6" min="0" max="1" step="0.05"
-                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                            <input type="number" id="testA" value="0.6" min="0" max="1" step="0.05" class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-500 mb-1">METRIC B</label>
-                            <input type="number" id="testB" value="0.4" min="0" max="1" step="0.05"
-                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                            <input type="number" id="testB" value="0.4" min="0" max="1" step="0.05" class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
                         </div>
                     </div>
 
                     <button id="predictBtn" disabled
-                            class="mt-6 w-full bg-slate-800 hover:bg-black py-4 text-white font-semibold rounded-2xl text-sm transition-all disabled:opacity-40">
+                            class="mt-6 w-full bg-slate-900 hover:bg-black py-4 text-white font-semibold rounded-2xl text-sm transition-all disabled:opacity-50">
                         PREDICT PROBABILITY
                     </button>
 
-                    <div class="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
-                        <div class="text-sm font-medium text-slate-600">Predicted Probability</div>
+                    <div class="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
+                        <span class="text-slate-600 font-medium">Predicted Probability</span>
                         <div id="predictionResult" class="text-5xl font-bold text-slate-900 tabular-nums">—</div>
                     </div>
                 </div>
@@ -177,7 +161,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
             authDomain: "test-17881.firebaseapp.com",
@@ -191,7 +174,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Dataset
         let dataSet = [
             { input: [0.1, 0.9], output: [0.05] },
             { input: [0.8, 0.2], output: [0.88] },
@@ -203,7 +185,7 @@
         let activeNetworkModel = null;
         let currentWorker = null;
 
-        // DOM Elements
+        // DOM
         const dataForm = document.getElementById('dataForm');
         const datasetTableBody = document.getElementById('datasetTableBody');
         const datasetSizeLabel = document.getElementById('datasetSize');
@@ -211,13 +193,11 @@
         const trainBtn = document.getElementById('trainBtn');
         const predictBtn = document.getElementById('predictBtn');
         const statusBadge = document.getElementById('statusBadge');
-
         const progressBar = document.getElementById('progressBar');
         const progressCount = document.getElementById('progressCount');
         const progressPercent = document.getElementById('progressPercent');
         const currentLoss = document.getElementById('currentLoss');
         const firebaseStatus = document.getElementById('firebaseStatus');
-
         const bulkPaste = document.getElementById('bulkPaste');
         const loadBulkBtn = document.getElementById('loadBulkBtn');
         const appendBulkBtn = document.getElementById('appendBulkBtn');
@@ -228,139 +208,106 @@
             
             dataSet.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.className = "hover:bg-slate-50";
                 tr.innerHTML = `
                     <td class="px-5 py-3">${item.input[0].toFixed(2)}</td>
                     <td class="px-5 py-3">${item.input[1].toFixed(2)}</td>
-                    <td class="px-5 py-3 font-semibold text-emerald-600">${(item.output[0] * 100).toFixed(1)}%</td>
+                    <td class="px-5 py-3 font-semibold text-emerald-600">${(item.output[0]*100).toFixed(1)}%</td>
                 `;
                 datasetTableBody.appendChild(tr);
             });
         }
 
-        // Parse bulk input
         function parseBulkInput(text) {
             const lines = text.trim().split('\n');
-            const newData = [];
-            
-            for (let line of lines) {
-                line = line.trim();
-                if (!line) continue;
-                
-                // Try CSV format: A,B,Prob
-                if (line.includes(',')) {
-                    const parts = line.split(',').map(p => parseFloat(p.trim()));
-                    if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
-                        newData.push({
-                            input: [parts[0], parts[1]],
-                            output: [Math.max(0, Math.min(1, parts[2]))]
-                        });
-                    }
-                } 
-                // Try JSON format
-                else if (line.startsWith('{') || line.startsWith('[')) {
-                    try {
-                        const parsed = JSON.parse(line);
-                        if (Array.isArray(parsed)) {
-                            parsed.forEach(item => {
-                                if (item.input && item.output) {
-                                    newData.push({
-                                        input: item.input,
-                                        output: [Math.max(0, Math.min(1, item.output[0] || item.output))]
-                                    });
-                                }
-                            });
-                        }
-                    } catch(e) {}
+            const parsed = [];
+            lines.forEach(line => {
+                if (!line.trim()) return;
+                const parts = line.split(',').map(x => parseFloat(x.trim()));
+                if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+                    parsed.push({
+                        input: [parts[0], parts[1]],
+                        output: [Math.max(0, Math.min(1, parts[2]))]
+                    });
                 }
-            }
-            return newData;
+            });
+            return parsed;
         }
 
-        // Load bulk (replace)
         loadBulkBtn.addEventListener('click', () => {
-            const parsed = parseBulkInput(bulkPaste.value);
-            if (parsed.length === 0) {
-                alert("No valid data found. Use format: A,B,Probability per line");
-                return;
-            }
-            dataSet = parsed;
-            renderDatasetTable();
-            bulkPaste.value = '';
+            const data = parseBulkInput(bulkPaste.value);
+            if (data.length > 0) {
+                dataSet = data;
+                renderDatasetTable();
+                bulkPaste.value = '';
+            } else alert("No valid rows found");
         });
 
-        // Append bulk
         appendBulkBtn.addEventListener('click', () => {
-            const parsed = parseBulkInput(bulkPaste.value);
-            if (parsed.length === 0) {
-                alert("No valid data found.");
-                return;
-            }
-            dataSet = dataSet.concat(parsed);
-            renderDatasetTable();
-            bulkPaste.value = '';
+            const data = parseBulkInput(bulkPaste.value);
+            if (data.length > 0) {
+                dataSet = [...dataSet, ...data];
+                renderDatasetTable();
+                bulkPaste.value = '';
+            } else alert("No valid rows found");
         });
 
-        // Form Submit
-        dataForm.addEventListener('submit', (e) => {
+        dataForm.addEventListener('submit', e => {
             e.preventDefault();
-            
-            const valA = parseFloat(document.getElementById('inputA').value);
-            const valB = parseFloat(document.getElementById('inputB').value);
-            const prob = parseFloat(document.getElementById('outputProb').value);
-
-            if (isNaN(valA) || isNaN(valB) || isNaN(prob)) return;
-
-            dataSet.push({ 
-                input: [valA, valB], 
-                output: [Math.max(0, Math.min(1, prob))] 
-            });
-            
-            renderDatasetTable();
-            dataForm.reset();
+            const a = parseFloat(document.getElementById('inputA').value);
+            const b = parseFloat(document.getElementById('inputB').value);
+            const p = parseFloat(document.getElementById('outputProb').value);
+            if (!isNaN(a) && !isNaN(b) && !isNaN(p)) {
+                dataSet.push({ input: [a, b], output: [Math.max(0, Math.min(1, p))] });
+                renderDatasetTable();
+                dataForm.reset();
+            }
         });
 
-        // Clear Dataset
         clearDatasetBtn.addEventListener('click', () => {
-            if (confirm("Clear entire dataset?")) {
+            if (confirm("Clear all data?")) {
                 dataSet = [];
                 renderDatasetTable();
             }
         });
 
-        // Training Worker Code (Optimized for speed)
+        // === FIXED WORKER CODE ===
         const workerCode = `
             importScripts('https://cdn.jsdelivr.net/npm/brain.js@2.0.0-beta.24/browser.min.js');
             
             self.onmessage = function(e) {
                 const { dataSet, iterations, errorThresh } = e.data;
                 
+                console.log('[Worker] Starting training with', dataSet.length, 'samples');
+                
                 const net = new brain.NeuralNetwork({
-                    hiddenLayers: [4, 3],   // Smaller network = faster training
+                    hiddenLayers: [5, 3],
                     activation: 'sigmoid'
                 });
                 
                 try {
                     const result = net.train(dataSet, {
-                        iterations: iterations,
-                        errorThresh: errorThresh,
+                        iterations: iterations || 3000,
+                        errorThresh: errorThresh || 0.005,
                         log: true,
-                        logPeriod: 80,
-                        callback: (stats) => {
+                        logPeriod: 60,
+                        callback: function(stats) {
                             self.postMessage({
                                 type: 'progress',
                                 iterations: stats.iterations,
-                                error: stats.error
+                                error: stats.error || 0
                             });
                         }
                     });
                     
+                    console.log('[Worker] Training completed');
                     self.postMessage({
                         type: 'complete',
                         model: net.toJSON(),
                         stats: result
                     });
                 } catch (err) {
+                    console.error('[Worker] Error:', err);
                     self.postMessage({
                         type: 'error',
                         message: err.message
@@ -372,29 +319,27 @@
         const blob = new Blob([workerCode], { type: 'application/javascript' });
         const workerURL = URL.createObjectURL(blob);
 
-        // Train Button
         trainBtn.addEventListener('click', () => {
             if (dataSet.length < 3) {
-                alert("Need at least 3 data points for meaningful training.");
+                alert("Add at least 3 data points");
                 return;
             }
 
             trainBtn.disabled = true;
             predictBtn.disabled = true;
-            statusBadge.innerHTML = `
-                <div class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                TRAINING
-            `;
+            document.getElementById('trainText').textContent = "TRAINING...";
+
+            statusBadge.innerHTML = `<div class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>TRAINING`;
             statusBadge.className = "bg-amber-100 text-amber-700 px-4 py-1.5 rounded-2xl text-xs font-semibold tracking-widest uppercase flex items-center gap-2";
 
-            const iterations = parseInt(document.getElementById('iterationsInput').value) || 4500;
-            const errorThresh = parseFloat(document.getElementById('errorThreshInput').value) || 0.003;
+            const iterations = parseInt(document.getElementById('iterationsInput').value) || 3000;
+            const errorThresh = parseFloat(document.getElementById('errorThreshInput').value) || 0.005;
 
             currentWorker = new Worker(workerURL);
-            
-            currentWorker.onmessage = function(e) {
+
+            currentWorker.onmessage = (e) => {
                 const msg = e.data;
-                
+
                 if (msg.type === 'progress') {
                     const percent = Math.min(100, Math.round((msg.iterations / iterations) * 100));
                     progressBar.style.width = percent + '%';
@@ -405,42 +350,41 @@
                 else if (msg.type === 'complete') {
                     activeNetworkModel = new brain.NeuralNetwork();
                     activeNetworkModel.fromJSON(msg.model);
-                    
+
                     predictBtn.disabled = false;
-                    
+                    document.getElementById('trainText').textContent = "TRAIN MODEL";
+
+                    // Upload to Firebase
                     firebaseStatus.textContent = "Uploading...";
-                    statusBadge.innerHTML = `
-                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        UPLOADING
-                    `;
-                    
-                    set(ref(db, 'models/probability_model_v3'), {
+                    set(ref(db, 'models/probability_model_v4'), {
                         model: msg.model,
                         metadata: {
                             trainedOn: new Date().toISOString(),
-                            sampleCount: dataSet.length,
+                            samples: dataSet.length,
                             finalError: msg.stats.error,
-                            epochs: msg.stats.iterations,
-                            architecture: "4-3 sigmoid (fast)"
+                            epochs: msg.stats.iterations
                         }
                     }).then(() => {
-                        firebaseStatus.textContent = "✅ Synced to Firebase";
-                        statusBadge.innerHTML = `
-                            <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                            READY
-                        `;
+                        firebaseStatus.textContent = "✅ Saved to Firebase";
+                        statusBadge.innerHTML = `<div class="w-2 h-2 bg-emerald-500 rounded-full"></div>READY`;
                         statusBadge.className = "bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-2xl text-xs font-semibold tracking-widest uppercase flex items-center gap-2";
                     }).catch(() => {
                         firebaseStatus.textContent = "Upload failed";
                     }).finally(() => {
                         trainBtn.disabled = false;
-                        if (currentWorker) currentWorker.terminate();
+                        currentWorker.terminate();
                     });
                 } 
                 else if (msg.type === 'error') {
-                    alert("Training error: " + msg.message);
-                    trainBtn.disabled = false;
+                    alert("Training Error: " + msg.message);
+                    resetUI();
                 }
+            };
+
+            currentWorker.onerror = (err) => {
+                console.error("Worker error:", err);
+                alert("Worker failed. Try again.");
+                resetUI();
             };
 
             currentWorker.postMessage({
@@ -450,26 +394,24 @@
             });
         });
 
-        // Prediction
+        function resetUI() {
+            trainBtn.disabled = false;
+            document.getElementById('trainText').textContent = "TRAIN MODEL";
+            statusBadge.innerHTML = `<div class="w-2 h-2 bg-slate-400 rounded-full"></div>IDLE`;
+            statusBadge.className = "bg-slate-100 text-slate-600 px-4 py-1.5 rounded-2xl text-xs font-semibold tracking-widest uppercase flex items-center gap-2";
+        }
+
         predictBtn.addEventListener('click', () => {
             if (!activeNetworkModel) return;
-            
             const a = parseFloat(document.getElementById('testA').value);
             const b = parseFloat(document.getElementById('testB').value);
-            
             if (isNaN(a) || isNaN(b)) return;
-            
-            const output = activeNetworkModel.run([a, b]);
-            const probability = output[0];
-            
-            const displayEl = document.getElementById('predictionResult');
-            displayEl.textContent = (probability * 100).toFixed(1) + '%';
-            
-            displayEl.classList.add('scale-110');
-            setTimeout(() => displayEl.classList.remove('scale-110'), 280);
+
+            const result = activeNetworkModel.run([a, b]);
+            document.getElementById('predictionResult').textContent = (result[0] * 100).toFixed(1) + '%';
         });
 
-        // Initialize
+        // Init
         renderDatasetTable();
     </script>
 </body>
