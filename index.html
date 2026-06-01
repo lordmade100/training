@@ -5,117 +5,168 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Probability Training Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brain.js@2.0.0-beta.24/browser.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 p-6">
-
     <div class="max-w-6xl mx-auto space-y-6">
-        <header class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Header -->
+        <header class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-900">Event Probability Engine</h1>
-                <p class="text-slate-500 text-sm">Train models to calculate occurrence likelihood based on environmental indicators.</p>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Event Probability Engine</h1>
+                <p class="text-slate-500">Neural network trainer for binary event likelihood prediction</p>
             </div>
-            <div class="flex items-center gap-2">
-                <span id="badge" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">IDLE</span>
+            <div class="flex items-center gap-3">
+                <div id="statusBadge" 
+                     class="bg-slate-100 text-slate-600 px-4 py-1.5 rounded-2xl text-xs font-semibold tracking-widest uppercase flex items-center gap-2">
+                    <div class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"></div>
+                    IDLE
+                </div>
             </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left Panel: Data Input + Dataset + Bulk Paste -->
             <div class="lg:col-span-5 space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                    <h2 class="font-semibold text-lg text-slate-900">Add Historical Observations</h2>
-                    <form id="dataForm" class="space-y-3">
-                        <div class="grid grid-cols-2 gap-3">
+                <!-- Add Single Observation -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="font-semibold text-lg text-slate-900 mb-4">Add Single Observation</h2>
+                    <form id="dataForm" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-medium text-slate-500 uppercase">Metric A (e.g. Risk/Prep)</label>
-                                <input type="number" id="inputA" min="0" max="1" step="0.01" value="0.2" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <label class="block text-xs font-medium text-slate-500 mb-1">METRIC A</label>
+                                <input type="number" id="inputA" min="0" max="1" step="0.01" value="0.35" 
+                                       class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-500 uppercase">Metric B (e.g. Intensity)</label>
-                                <input type="number" id="inputB" min="0" max="1" step="0.01" value="0.8" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <label class="block text-xs font-medium text-slate-500 mb-1">METRIC B</label>
+                                <input type="number" id="inputB" min="0" max="1" step="0.01" value="0.65" 
+                                       class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 uppercase">Observed Probability (0.0 - 1.0)</label>
-                            <input type="number" id="outputProb" min="0" max="1" step="0.01" value="0.15" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-500 mb-1">OBSERVED PROBABILITY</label>
+                            <input type="number" id="outputProb" min="0" max="1" step="0.01" value="0.42" 
+                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
                         </div>
-                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors cursor-pointer">
-                            Append to Dataset
+                        <button type="submit" 
+                                class="w-full bg-slate-900 hover:bg-black text-white font-medium py-3.5 rounded-2xl text-sm transition-all active:scale-95">
+                            ADD TO TRAINING SET
                         </button>
                     </form>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-semibold text-slate-900">Current Dataset (<span id="datasetSize">0</span> entries)</h3>
-                        <button id="clearDatasetBtn" class="text-xs text-rose-600 hover:underline cursor-pointer">Clear Custom</button>
+                <!-- Bulk Paste Dataset -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="font-semibold text-lg text-slate-900 mb-3">Bulk Paste Dataset</h2>
+                    <p class="text-xs text-slate-500 mb-3">Format: <code class="bg-slate-100 px-1 rounded">A,B,Probability</code> (one per line) or JSON</p>
+                    <textarea id="bulkPaste" rows="6"
+                              class="block w-full rounded-2xl border border-slate-200 p-4 text-sm font-mono focus:outline-none focus:border-blue-500 resize-none"
+                              placeholder="0.1,0.9,0.05
+0.8,0.2,0.88
+0.5,0.5,0.48
+0.3,0.7,0.25"></textarea>
+                    <div class="flex gap-3 mt-3">
+                        <button id="loadBulkBtn"
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-2xl text-sm transition-all">
+                            LOAD & REPLACE DATASET
+                        </button>
+                        <button id="appendBulkBtn"
+                                class="flex-1 bg-slate-700 hover:bg-slate-800 text-white font-medium py-3 rounded-2xl text-sm transition-all">
+                            APPEND TO DATASET
+                        </button>
                     </div>
-                    <div class="overflow-x-auto border border-slate-100 rounded-lg max-h-64">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-100">
+                </div>
+
+                <!-- Current Dataset -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-slate-900">Training Dataset <span id="datasetSize" class="text-blue-600">(5)</span></h3>
+                        <button id="clearDatasetBtn" 
+                                class="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1">
+                            CLEAR ALL
+                        </button>
+                    </div>
+                    
+                    <div class="border border-slate-100 rounded-2xl overflow-hidden max-h-64 overflow-y-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 sticky top-0">
                                 <tr>
-                                    <th class="px-4 py-2">Metric A</th>
-                                    <th class="px-4 py-2">Metric B</th>
-                                    <th class="px-4 py-2">Target Probability</th>
+                                    <th class="px-5 py-3 text-left text-xs font-medium text-slate-500">A</th>
+                                    <th class="px-5 py-3 text-left text-xs font-medium text-slate-500">B</th>
+                                    <th class="px-5 py-3 text-left text-xs font-medium text-slate-500">PROB</th>
                                 </tr>
                             </thead>
-                            <tbody id="datasetTableBody" class="divide-y divide-slate-100 text-slate-600 font-mono text-xs">
-                                </tbody>
+                            <tbody id="datasetTableBody" class="divide-y divide-slate-100 font-mono text-xs"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
+            <!-- Right Panel: Training + Inference -->
             <div class="lg:col-span-7 space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                    <h2 class="font-semibold text-lg text-slate-900">Execution Configuration</h2>
+                <!-- Training Configuration -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="font-semibold text-lg text-slate-900 mb-4">Training Configuration</h2>
+                    
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 uppercase">Target Epochs</label>
-                            <input type="number" id="iterationsInput" value="15000" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-500 mb-1">TARGET EPOCHS (Faster)</label>
+                            <input type="number" id="iterationsInput" value="4500" 
+                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 uppercase">Min Loss Limit</label>
-                            <input type="number" id="errorThreshInput" value="0.002" step="0.001" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-500 mb-1">ERROR THRESHOLD</label>
+                            <input type="number" id="errorThreshInput" value="0.003" step="0.001" 
+                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
                         </div>
                     </div>
 
-                    <div class="space-y-2 pt-2">
-                        <div class="flex justify-between text-xs font-medium">
-                            <span id="progressCount" class="text-slate-500">Epochs: 0 / 0</span>
-                            <span id="progressPercent" class="text-blue-600 font-semibold">0%</span>
+                    <!-- Progress -->
+                    <div class="mt-6 space-y-3">
+                        <div class="flex justify-between text-xs">
+                            <span id="progressCount" class="font-medium text-slate-500">Epochs: 0 / 4500</span>
+                            <span id="progressPercent" class="font-semibold text-blue-600">0%</span>
                         </div>
-                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                            <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-75 ease-out"></div>
+                        <div class="h-2 bg-slate-100 rounded-3xl overflow-hidden">
+                            <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 w-0 transition-all duration-200"></div>
                         </div>
-                        <div class="flex justify-between text-[11px] font-mono text-slate-400">
-                            <span id="currentLoss">Current Error: -</span>
-                            <span id="firebaseStatus">Firebase Sync: Pending</span>
+                        <div class="flex justify-between text-xs font-mono text-slate-400">
+                            <span id="currentLoss">Loss: —</span>
+                            <span id="firebaseStatus">Sync: Ready</span>
                         </div>
                     </div>
 
-                    <button id="trainBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-md text-sm transition-colors cursor-pointer flex justify-center items-center gap-2">
-                        Execute Pipeline Network & Upload
+                    <button id="trainBtn"
+                            class="mt-6 w-full bg-blue-600 hover:bg-blue-700 py-4 text-white font-semibold rounded-2xl text-sm transition-all active:scale-95 flex items-center justify-center gap-2">
+                        TRAIN NEURAL NETWORK + UPLOAD
                     </button>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                    <h2 class="font-semibold text-lg text-slate-900">Run Inference Predictor</h2>
-                    <div class="grid grid-cols-2 gap-3">
+                <!-- Inference -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="font-semibold text-lg text-slate-900 mb-4">Run Inference</h2>
+                    
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 uppercase">Metric A</label>
-                            <input type="number" id="testA" value="0.5" min="0" max="1" step="0.1" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-500 mb-1">METRIC A</label>
+                            <input type="number" id="testA" value="0.6" min="0" max="1" step="0.05"
+                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-500 uppercase">Metric B</label>
-                            <input type="number" id="testB" value="0.5" min="0" max="1" step="0.1" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-500 mb-1">METRIC B</label>
+                            <input type="number" id="testB" value="0.4" min="0" max="1" step="0.05"
+                                   class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
                         </div>
                     </div>
-                    <button id="predictBtn" disabled class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                        Calculate Likelihood Probability
+
+                    <button id="predictBtn" disabled
+                            class="mt-6 w-full bg-slate-800 hover:bg-black py-4 text-white font-semibold rounded-2xl text-sm transition-all disabled:opacity-40">
+                        PREDICT PROBABILITY
                     </button>
-                    <div class="p-4 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
-                        <span class="text-sm font-medium text-slate-600">Predicted Probability Output:</span>
-                        <div id="predictionResult" class="text-3xl font-extrabold text-slate-900">-</div>
+
+                    <div class="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                        <div class="text-sm font-medium text-slate-600">Predicted Probability</div>
+                        <div id="predictionResult" class="text-5xl font-bold text-slate-900 tabular-nums">—</div>
                     </div>
                 </div>
             </div>
@@ -126,7 +177,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Hardcoded target environment profiles
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
             authDomain: "test-17881.firebaseapp.com",
@@ -134,219 +185,291 @@
             projectId: "test-17881",
             storageBucket: "test-17881.firebasestorage.app",
             messagingSenderId: "1057428047643",
-            appId: "1:1057428047643:web:f3801c0d933225a5cd35be",
-            measurementId: "G-65PFSJ1MDS"
+            appId: "1:1057428047643:web:f3801c0d933225a5cd35be"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Core App Memory States (Populated with representative probability trends baseline)
+        // Dataset
         let dataSet = [
             { input: [0.1, 0.9], output: [0.05] },
             { input: [0.8, 0.2], output: [0.88] },
             { input: [0.5, 0.5], output: [0.48] },
-            { input: [0.2, 0.4], output: [0.22] }
+            { input: [0.2, 0.4], output: [0.22] },
+            { input: [0.7, 0.6], output: [0.65] }
         ];
-        
-        let activeNetworkModel = null;
 
-        // DOM Element Access Selectors
+        let activeNetworkModel = null;
+        let currentWorker = null;
+
+        // DOM Elements
         const dataForm = document.getElementById('dataForm');
         const datasetTableBody = document.getElementById('datasetTableBody');
         const datasetSizeLabel = document.getElementById('datasetSize');
         const clearDatasetBtn = document.getElementById('clearDatasetBtn');
         const trainBtn = document.getElementById('trainBtn');
         const predictBtn = document.getElementById('predictBtn');
-        const badge = document.getElementById('badge');
-        
-        // Progress Bars Elements
+        const statusBadge = document.getElementById('statusBadge');
+
         const progressBar = document.getElementById('progressBar');
         const progressCount = document.getElementById('progressCount');
         const progressPercent = document.getElementById('progressPercent');
         const currentLoss = document.getElementById('currentLoss');
         const firebaseStatus = document.getElementById('firebaseStatus');
 
-        // Render Data Arrays to View Matrix
+        const bulkPaste = document.getElementById('bulkPaste');
+        const loadBulkBtn = document.getElementById('loadBulkBtn');
+        const appendBulkBtn = document.getElementById('appendBulkBtn');
+
         function renderDatasetTable() {
             datasetTableBody.innerHTML = '';
-            datasetSizeLabel.innerText = dataSet.length;
+            datasetSizeLabel.textContent = `(${dataSet.length})`;
+            
             dataSet.forEach(item => {
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
                 tr.innerHTML = `
-                    <td class="px-4 py-2">${item.input[0].toFixed(2)}</td>
-                    <td class="px-4 py-2">${item.input[1].toFixed(2)}</td>
-                    <td class="px-4 py-2 font-semibold text-blue-600">${(item.output[0] * 100).toFixed(0)}% (${item.output[0].toFixed(2)})</td>
+                    <td class="px-5 py-3">${item.input[0].toFixed(2)}</td>
+                    <td class="px-5 py-3">${item.input[1].toFixed(2)}</td>
+                    <td class="px-5 py-3 font-semibold text-emerald-600">${(item.output[0] * 100).toFixed(1)}%</td>
                 `;
                 datasetTableBody.appendChild(tr);
             });
         }
 
-        // Form Submission Event Interceptor
+        // Parse bulk input
+        function parseBulkInput(text) {
+            const lines = text.trim().split('\n');
+            const newData = [];
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                
+                // Try CSV format: A,B,Prob
+                if (line.includes(',')) {
+                    const parts = line.split(',').map(p => parseFloat(p.trim()));
+                    if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+                        newData.push({
+                            input: [parts[0], parts[1]],
+                            output: [Math.max(0, Math.min(1, parts[2]))]
+                        });
+                    }
+                } 
+                // Try JSON format
+                else if (line.startsWith('{') || line.startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(line);
+                        if (Array.isArray(parsed)) {
+                            parsed.forEach(item => {
+                                if (item.input && item.output) {
+                                    newData.push({
+                                        input: item.input,
+                                        output: [Math.max(0, Math.min(1, item.output[0] || item.output))]
+                                    });
+                                }
+                            });
+                        }
+                    } catch(e) {}
+                }
+            }
+            return newData;
+        }
+
+        // Load bulk (replace)
+        loadBulkBtn.addEventListener('click', () => {
+            const parsed = parseBulkInput(bulkPaste.value);
+            if (parsed.length === 0) {
+                alert("No valid data found. Use format: A,B,Probability per line");
+                return;
+            }
+            dataSet = parsed;
+            renderDatasetTable();
+            bulkPaste.value = '';
+        });
+
+        // Append bulk
+        appendBulkBtn.addEventListener('click', () => {
+            const parsed = parseBulkInput(bulkPaste.value);
+            if (parsed.length === 0) {
+                alert("No valid data found.");
+                return;
+            }
+            dataSet = dataSet.concat(parsed);
+            renderDatasetTable();
+            bulkPaste.value = '';
+        });
+
+        // Form Submit
         dataForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            
             const valA = parseFloat(document.getElementById('inputA').value);
             const valB = parseFloat(document.getElementById('inputB').value);
             const prob = parseFloat(document.getElementById('outputProb').value);
 
-            dataSet.push({ input: [valA, valB], output: [prob] });
+            if (isNaN(valA) || isNaN(valB) || isNaN(prob)) return;
+
+            dataSet.push({ 
+                input: [valA, valB], 
+                output: [Math.max(0, Math.min(1, prob))] 
+            });
+            
             renderDatasetTable();
             dataForm.reset();
         });
 
-        // Clear Custom Memory Layouts
+        // Clear Dataset
         clearDatasetBtn.addEventListener('click', () => {
-            dataSet = [];
-            renderDatasetTable();
+            if (confirm("Clear entire dataset?")) {
+                dataSet = [];
+                renderDatasetTable();
+            }
         });
 
-        // Dynamically writing background code execution for our Web Worker thread
-        const workerBlobCode = `
+        // Training Worker Code (Optimized for speed)
+        const workerCode = `
             importScripts('https://cdn.jsdelivr.net/npm/brain.js@2.0.0-beta.24/browser.min.js');
             
             self.onmessage = function(e) {
                 const { dataSet, iterations, errorThresh } = e.data;
-                const net = new brain.NeuralNetwork({ hiddenLayers: [4, 3] });
+                
+                const net = new brain.NeuralNetwork({
+                    hiddenLayers: [4, 3],   // Smaller network = faster training
+                    activation: 'sigmoid'
+                });
                 
                 try {
-                    const statusReport = net.train(dataSet, {
+                    const result = net.train(dataSet, {
                         iterations: iterations,
                         errorThresh: errorThresh,
                         log: true,
-                        logPeriod: Math.max(1, Math.floor(iterations / 100)), // dynamic tracking segments
-                        callback: function(snapshot) {
+                        logPeriod: 80,
+                        callback: (stats) => {
                             self.postMessage({
-                                action: 'PROGRESS_TICK',
-                                iterations: snapshot.iterations,
-                                error: snapshot.error
+                                type: 'progress',
+                                iterations: stats.iterations,
+                                error: stats.error
                             });
                         }
                     });
                     
                     self.postMessage({
-                        action: 'TRAINING_SUCCESS',
-                        stats: statusReport,
-                        jsonModel: net.toJSON()
+                        type: 'complete',
+                        model: net.toJSON(),
+                        stats: result
                     });
-                } catch(error) {
-                    self.postMessage({ action: 'TRAINING_FAULT', message: error.message });
+                } catch (err) {
+                    self.postMessage({
+                        type: 'error',
+                        message: err.message
+                    });
                 }
             };
         `;
 
-        // Create functional URL object pointer from our background processing script string
-        const blobInstance = new Blob([workerBlobCode], { type: 'application/javascript' });
-        const workerUrl = URL.createObjectURL(blobInstance);
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const workerURL = URL.createObjectURL(blob);
 
-        // Core Controller Trigger Pipeline
+        // Train Button
         trainBtn.addEventListener('click', () => {
-            if(dataSet.length === 0) {
-                alert("Please add at least one entry of training observation rows before starting.");
+            if (dataSet.length < 3) {
+                alert("Need at least 3 data points for meaningful training.");
                 return;
             }
 
-            // Set UI components states to lock interface during pipeline processes
             trainBtn.disabled = true;
             predictBtn.disabled = true;
-            badge.innerText = "TRAINING";
-            badge.className = "bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
-            firebaseStatus.innerText = "Firebase Sync: Awaiting Engine...";
+            statusBadge.innerHTML = `
+                <div class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                TRAINING
+            `;
+            statusBadge.className = "bg-amber-100 text-amber-700 px-4 py-1.5 rounded-2xl text-xs font-semibold tracking-widest uppercase flex items-center gap-2";
 
-            const targetIterations = parseInt(document.getElementById('iterationsInput').value) || 10000;
-            const targetErrorThresh = parseFloat(document.getElementById('errorThreshInput').value) || 0.002;
+            const iterations = parseInt(document.getElementById('iterationsInput').value) || 4500;
+            const errorThresh = parseFloat(document.getElementById('errorThreshInput').value) || 0.003;
 
-            // Instantiate dynamic background worker
-            const trainingWorker = new Worker(workerUrl);
+            currentWorker = new Worker(workerURL);
             
-            // Post payload arrays across process boundaries
-            trainingWorker.postMessage({
-                dataSet: dataSet,
-                iterations: targetIterations,
-                errorThresh: targetErrorThresh
-            });
-
-            // Handle standard background message streams
-            trainingWorker.onmessage = function(event) {
-                const payload = event.data;
-
-                if (payload.action === 'PROGRESS_TICK') {
-                    const currentIteration = payload.iterations;
-                    const calculatedPercent = Math.min(100, Math.floor((currentIteration / targetIterations) * 100));
-                    
-                    // Live UI Updates without thread lockups
-                    progressBar.style.width = `${calculatedPercent}%`;
-                    progressPercent.innerText = `${calculatedPercent}%`;
-                    progressCount.innerText = `Epochs: ${currentIteration} / ${targetIterations}`;
-                    currentLoss.innerText = `Current Error: ${payload.error.toFixed(6)}`;
-                } 
+            currentWorker.onmessage = function(e) {
+                const msg = e.data;
                 
-                else if (payload.action === 'TRAINING_SUCCESS') {
-                    progressBar.style.width = '100%';
-                    progressPercent.innerText = '100%';
-                    progressCount.innerText = `Completed on Epoch: ${payload.stats.iterations}`;
-                    currentLoss.innerText = `Target Achieved Loss: ${payload.stats.error.toFixed(6)}`;
-                    
-                    // Build local engine instances out of structural representations
+                if (msg.type === 'progress') {
+                    const percent = Math.min(100, Math.round((msg.iterations / iterations) * 100));
+                    progressBar.style.width = percent + '%';
+                    progressPercent.textContent = percent + '%';
+                    progressCount.textContent = `Epochs: ${msg.iterations} / ${iterations}`;
+                    currentLoss.textContent = `Loss: ${msg.error.toFixed(6)}`;
+                } 
+                else if (msg.type === 'complete') {
                     activeNetworkModel = new brain.NeuralNetwork();
-                    activeNetworkModel.fromJSON(payload.jsonModel);
+                    activeNetworkModel.fromJSON(msg.model);
+                    
                     predictBtn.disabled = false;
-
-                    // Forward payload structure to remote real-time location database endpoints
-                    badge.innerText = "UPLOADING";
-                    badge.className = "bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
-                    firebaseStatus.innerText = "Firebase Sync: Writing matrix...";
-
-                    set(ref(db, 'models/probability_model'), {
-                        structuralWeights: payload.jsonModel,
-                        metaInfo: {
-                            archType: "NeuralNetwork (Probability Bounded)",
-                            trainedSamplesCount: dataSet.length,
-                            finalTrainedLoss: payload.stats.error,
-                            totalCyclesRun: payload.stats.iterations,
-                            lastUpdatedDate: new Date().toISOString()
+                    
+                    firebaseStatus.textContent = "Uploading...";
+                    statusBadge.innerHTML = `
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                        UPLOADING
+                    `;
+                    
+                    set(ref(db, 'models/probability_model_v3'), {
+                        model: msg.model,
+                        metadata: {
+                            trainedOn: new Date().toISOString(),
+                            sampleCount: dataSet.length,
+                            finalError: msg.stats.error,
+                            epochs: msg.stats.iterations,
+                            architecture: "4-3 sigmoid (fast)"
                         }
-                    })
-                    .then(() => {
-                        firebaseStatus.innerText = "Firebase Sync: Saved Successfully!";
-                        badge.innerText = "SYNCED";
-                        badge.className = "bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
-                    })
-                    .catch(err => {
-                        firebaseStatus.innerText = `Firebase Sync Error: ${err.message}`;
-                        badge.innerText = "REMOTE ERROR";
-                        badge.className = "bg-rose-600 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
-                    })
-                    .finally(() => {
+                    }).then(() => {
+                        firebaseStatus.textContent = "✅ Synced to Firebase";
+                        statusBadge.innerHTML = `
+                            <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                            READY
+                        `;
+                        statusBadge.className = "bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-2xl text-xs font-semibold tracking-widest uppercase flex items-center gap-2";
+                    }).catch(() => {
+                        firebaseStatus.textContent = "Upload failed";
+                    }).finally(() => {
                         trainBtn.disabled = false;
-                        trainingWorker.terminate();
+                        if (currentWorker) currentWorker.terminate();
                     });
                 } 
-                
-                else if (payload.action === 'TRAINING_FAULT') {
-                    alert(`Training routine exception encountered: ${payload.message}`);
+                else if (msg.type === 'error') {
+                    alert("Training error: " + msg.message);
                     trainBtn.disabled = false;
-                    badge.innerText = "ERROR";
-                    badge.className = "bg-rose-600 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
-                    trainingWorker.terminate();
                 }
             };
+
+            currentWorker.postMessage({
+                dataSet: dataSet,
+                iterations: iterations,
+                errorThresh: errorThresh
+            });
         });
 
-        // Run Inference Calculations 
-        document.getElementById('predictBtn').addEventListener('click', () => {
+        // Prediction
+        predictBtn.addEventListener('click', () => {
             if (!activeNetworkModel) return;
             
-            const testValA = parseFloat(document.getElementById('testA').value);
-            const testValB = parseFloat(document.getElementById('testB').value);
+            const a = parseFloat(document.getElementById('testA').value);
+            const b = parseFloat(document.getElementById('testB').value);
             
-            const matrixResult = activeNetworkModel.run([testValA, testValB]);
-            const calculatedProbability = matrixResult[0];
+            if (isNaN(a) || isNaN(b)) return;
             
-            // Format probability display output context cleanly
-            document.getElementById('predictionResult').innerText = `${(calculatedProbability * 100).toFixed(1)}%`;
+            const output = activeNetworkModel.run([a, b]);
+            const probability = output[0];
+            
+            const displayEl = document.getElementById('predictionResult');
+            displayEl.textContent = (probability * 100).toFixed(1) + '%';
+            
+            displayEl.classList.add('scale-110');
+            setTimeout(() => displayEl.classList.remove('scale-110'), 280);
         });
 
-        // Initial View Build Trigger Execution
+        // Initialize
         renderDatasetTable();
     </script>
 </body>
