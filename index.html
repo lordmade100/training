@@ -3,99 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain.js + Firebase Training Dashboard</title>
-    <!-- Tailwind CSS for clean layout utility -->
+    <title>Probability Training Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Brain.js Browser CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/brain.js@2.0.0-beta.24/browser.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 p-6">
 
-    <div class="max-w-4xl mx-auto space-y-6">
-        <!-- Header -->
-        <header class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-            <h1 class="text-2xl font-bold text-slate-900">Numerical Training Dashboard</h1>
-            <p class="text-slate-500 text-sm">Train a brain.js network locally and automatically sync JSON structures to Firebase Realtime Database.</p>
+    <div class="max-w-6xl mx-auto space-y-6">
+        <header class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Event Probability Engine</h1>
+                <p class="text-slate-500 text-sm">Train models to calculate occurrence likelihood based on environmental indicators.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="badge" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">IDLE</span>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Left Panel: Configurations & Controls -->
-            <div class="space-y-6 md:col-span-1">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-5 space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                    <h2 class="font-semibold text-lg text-slate-900">Training Configs</h2>
-                    
-                    <div>
-                        <label class="block text-xs font-medium text-slate-500 uppercase">Iterations</label>
-                        <input type="number" id="iterationsInput" value="5000" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-500 uppercase">Error Threshold</label>
-                        <input type="number" id="errorThreshInput" value="0.005" step="0.001" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                    </div>
-
-                    <button id="trainBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors cursor-pointer">
-                        Start Training & Sync
-                    </button>
+                    <h2 class="font-semibold text-lg text-slate-900">Add Historical Observations</h2>
+                    <form id="dataForm" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase">Metric A (e.g. Risk/Prep)</label>
+                                <input type="number" id="inputA" min="0" max="1" step="0.01" value="0.2" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 uppercase">Metric B (e.g. Intensity)</label>
+                                <input type="number" id="inputB" min="0" max="1" step="0.01" value="0.8" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 uppercase">Observed Probability (0.0 - 1.0)</label>
+                            <input type="number" id="outputProb" min="0" max="1" step="0.01" value="0.15" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors cursor-pointer">
+                            Append to Dataset
+                        </button>
+                    </form>
                 </div>
 
-                <!-- Test Evaluation Area -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                    <h2 class="font-semibold text-lg text-slate-900">Test Local Model</h2>
-                    <p class="text-xs text-slate-500">Input a value to see what the trained model predicts.</p>
-                    
-                    <div>
-                        <label class="block text-xs font-medium text-slate-500 uppercase">Input Value (Scaled 0-1)</label>
-                        <input type="number" id="testInput" value="0.5" step="0.1" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold text-slate-900">Current Dataset (<span id="datasetSize">0</span> entries)</h3>
+                        <button id="clearDatasetBtn" class="text-xs text-rose-600 hover:underline cursor-pointer">Clear Custom</button>
                     </div>
-
-                    <button id="predictBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors cursor-pointer" disabled>
-                        Predict
-                    </button>
-
-                    <div class="pt-2 border-t border-slate-100">
-                        <span class="text-xs font-medium text-slate-500 block">Output Result:</span>
-                        <div id="predictionResult" class="text-xl font-bold text-slate-900 mt-1">-</div>
+                    <div class="overflow-x-auto border border-slate-100 rounded-lg max-h-64">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-100">
+                                <tr>
+                                    <th class="px-4 py-2">Metric A</th>
+                                    <th class="px-4 py-2">Metric B</th>
+                                    <th class="px-4 py-2">Target Probability</th>
+                                </tr>
+                            </thead>
+                            <tbody id="datasetTableBody" class="divide-y divide-slate-100 text-slate-600 font-mono text-xs">
+                                </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Panel: Dataset & Live Terminal Output -->
-            <div class="space-y-6 md:col-span-2">
-                <!-- Training Dataset Info -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <h2 class="font-semibold text-lg text-slate-900 mb-2">Active Training Set</h2>
-                    <p class="text-xs text-slate-500 mb-3">Formula used below: <code class="bg-slate-100 px-1 py-0.5 rounded">Output = Input * 2</code> (Normalized scales)</p>
-                    <div class="bg-slate-50 p-3 rounded-lg text-xs font-mono text-slate-600 max-h-24 overflow-y-auto">
-                        [<br>
-                        &nbsp;&nbsp;{ input: [0.1], output: [0.2] },<br>
-                        &nbsp;&nbsp;{ input: [0.2], output: [0.4] },<br>
-                        &nbsp;&nbsp;{ input: [0.3], output: [0.6] },<br>
-                        &nbsp;&nbsp;{ input: [0.4], output: [0.8] }<br>
-                        ]
+            <div class="lg:col-span-7 space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
+                    <h2 class="font-semibold text-lg text-slate-900">Execution Configuration</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 uppercase">Target Epochs</label>
+                            <input type="number" id="iterationsInput" value="15000" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 uppercase">Min Loss Limit</label>
+                            <input type="number" id="errorThreshInput" value="0.002" step="0.001" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
                     </div>
+
+                    <div class="space-y-2 pt-2">
+                        <div class="flex justify-between text-xs font-medium">
+                            <span id="progressCount" class="text-slate-500">Epochs: 0 / 0</span>
+                            <span id="progressPercent" class="text-blue-600 font-semibold">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                            <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-75 ease-out"></div>
+                        </div>
+                        <div class="flex justify-between text-[11px] font-mono text-slate-400">
+                            <span id="currentLoss">Current Error: -</span>
+                            <span id="firebaseStatus">Firebase Sync: Pending</span>
+                        </div>
+                    </div>
+
+                    <button id="trainBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-md text-sm transition-colors cursor-pointer flex justify-center items-center gap-2">
+                        Execute Pipeline Network & Upload
+                    </button>
                 </div>
 
-                <!-- Console / Logger Window -->
-                <div class="bg-slate-900 text-emerald-400 p-4 rounded-xl shadow-inner font-mono text-xs h-80 flex flex-col justify-between">
-                    <div id="consoleLog" class="overflow-y-auto space-y-1 pr-2 flex-1">
-                        <div>&gt; Dashboard ready. Click "Start Training & Sync" to initialize weights...</div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
+                    <h2 class="font-semibold text-lg text-slate-900">Run Inference Predictor</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 uppercase">Metric A</label>
+                            <input type="number" id="testA" value="0.5" min="0" max="1" step="0.1" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 uppercase">Metric B</label>
+                            <input type="number" id="testB" value="0.5" min="0" max="1" step="0.1" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
                     </div>
-                    <div id="syncStatus" class="mt-2 pt-2 border-t border-slate-800 text-slate-400 flex justify-between items-center">
-                        <span>Firebase Node: /models/numeric_model</span>
-                        <span id="badge" class="bg-slate-800 text-slate-400 px-2 py-0.5 rounded text-[10px]">IDLE</span>
+                    <button id="predictBtn" disabled class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                        Calculate Likelihood Probability
+                    </button>
+                    <div class="p-4 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
+                        <span class="text-sm font-medium text-slate-600">Predicted Probability Output:</span>
+                        <div id="predictionResult" class="text-3xl font-extrabold text-slate-900">-</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK Implementation Layer -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Hardcoded setup profile provided by user
+        // Hardcoded target environment profiles
         const firebaseConfig = {
             apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
             authDomain: "test-17881.firebaseapp.com",
@@ -107,109 +138,216 @@
             measurementId: "G-65PFSJ1MDS"
         };
 
-        // Initialize App & Reference DB Instances
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let trainedModel = null;
+        // Core App Memory States (Populated with representative probability trends baseline)
+        let dataSet = [
+            { input: [0.1, 0.9], output: [0.05] },
+            { input: [0.8, 0.2], output: [0.88] },
+            { input: [0.5, 0.5], output: [0.48] },
+            { input: [0.2, 0.4], output: [0.22] }
+        ];
+        
+        let activeNetworkModel = null;
 
-        // Dom Elements UI References
-        const logger = document.getElementById('consoleLog');
-        const badge = document.getElementById('badge');
+        // DOM Element Access Selectors
+        const dataForm = document.getElementById('dataForm');
+        const datasetTableBody = document.getElementById('datasetTableBody');
+        const datasetSizeLabel = document.getElementById('datasetSize');
+        const clearDatasetBtn = document.getElementById('clearDatasetBtn');
         const trainBtn = document.getElementById('trainBtn');
         const predictBtn = document.getElementById('predictBtn');
-        const testInput = document.getElementById('testInput');
-        const predictionResult = document.getElementById('predictionResult');
+        const badge = document.getElementById('badge');
+        
+        // Progress Bars Elements
+        const progressBar = document.getElementById('progressBar');
+        const progressCount = document.getElementById('progressCount');
+        const progressPercent = document.getElementById('progressPercent');
+        const currentLoss = document.getElementById('currentLoss');
+        const firebaseStatus = document.getElementById('firebaseStatus');
 
-        function appendLog(text) {
-            const row = document.createElement('div');
-            row.innerText = `> ${text}`;
-            logger.appendChild(row);
-            logger.scrollTop = logger.scrollHeight;
+        // Render Data Arrays to View Matrix
+        function renderDatasetTable() {
+            datasetTableBody.innerHTML = '';
+            datasetSizeLabel.innerText = dataSet.length;
+            dataSet.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-2">${item.input[0].toFixed(2)}</td>
+                    <td class="px-4 py-2">${item.input[1].toFixed(2)}</td>
+                    <td class="px-4 py-2 font-semibold text-blue-600">${(item.output[0] * 100).toFixed(0)}% (${item.output[0].toFixed(2)})</td>
+                `;
+                datasetTableBody.appendChild(tr);
+            });
         }
 
-        // Action Routine
-        trainBtn.addEventListener('click', async () => {
-            trainBtn.disabled = true;
-            badge.innerText = "TRAINING";
-            badge.className = "bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px]";
-            appendLog("Initializing Brain.js feedforward architecture...");
+        // Form Submission Event Interceptor
+        dataForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const valA = parseFloat(document.getElementById('inputA').value);
+            const valB = parseFloat(document.getElementById('inputB').value);
+            const prob = parseFloat(document.getElementById('outputProb').value);
 
-            // Setup basic normalized linear data sequence
-            const dataSet = [
-                { input: [0.1], output: [0.2] },
-                { input: [0.2], output: [0.4] },
-                { input: [0.3], output: [0.6] },
-                { input: [0.4], output: [0.8] }
-            ];
+            dataSet.push({ input: [valA, valB], output: [prob] });
+            renderDatasetTable();
+            dataForm.reset();
+        });
 
-            const net = new brain.NeuralNetwork();
-            const iterations = parseInt(document.getElementById('iterationsInput').value) || 5000;
-            const errorThresh = parseFloat(document.getElementById('errorThreshInput').value) || 0.005;
+        // Clear Custom Memory Layouts
+        clearDatasetBtn.addEventListener('click', () => {
+            dataSet = [];
+            renderDatasetTable();
+        });
 
-            // Execute training synchronously inside browser window thread
-            setTimeout(() => {
+        // Dynamically writing background code execution for our Web Worker thread
+        const workerBlobCode = `
+            importScripts('https://cdn.jsdelivr.net/npm/brain.js@2.0.0-beta.24/browser.min.js');
+            
+            self.onmessage = function(e) {
+                const { dataSet, iterations, errorThresh } = e.data;
+                const net = new brain.NeuralNetwork({ hiddenLayers: [4, 3] });
+                
                 try {
-                    const stats = net.train(dataSet, {
+                    const statusReport = net.train(dataSet, {
                         iterations: iterations,
                         errorThresh: errorThresh,
                         log: true,
-                        logPeriod: Math.max(1, Math.floor(iterations / 10)),
-                        callback: (logData) => {
-                            appendLog(`Iteration: ${logData.iterations} | Current Loss: ${logData.error.toFixed(6)}`);
+                        logPeriod: Math.max(1, Math.floor(iterations / 100)), // dynamic tracking segments
+                        callback: function(snapshot) {
+                            self.postMessage({
+                                action: 'PROGRESS_TICK',
+                                iterations: snapshot.iterations,
+                                error: snapshot.error
+                            });
                         }
                     });
+                    
+                    self.postMessage({
+                        action: 'TRAINING_SUCCESS',
+                        stats: statusReport,
+                        jsonModel: net.toJSON()
+                    });
+                } catch(error) {
+                    self.postMessage({ action: 'TRAINING_FAULT', message: error.message });
+                }
+            };
+        `;
 
-                    appendLog(`Training Finished! Achieved error rate: ${stats.error.toFixed(6)} across ${stats.iterations} passes.`);
-                    trainedModel = net;
+        // Create functional URL object pointer from our background processing script string
+        const blobInstance = new Blob([workerBlobCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(blobInstance);
+
+        // Core Controller Trigger Pipeline
+        trainBtn.addEventListener('click', () => {
+            if(dataSet.length === 0) {
+                alert("Please add at least one entry of training observation rows before starting.");
+                return;
+            }
+
+            // Set UI components states to lock interface during pipeline processes
+            trainBtn.disabled = true;
+            predictBtn.disabled = true;
+            badge.innerText = "TRAINING";
+            badge.className = "bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
+            firebaseStatus.innerText = "Firebase Sync: Awaiting Engine...";
+
+            const targetIterations = parseInt(document.getElementById('iterationsInput').value) || 10000;
+            const targetErrorThresh = parseFloat(document.getElementById('errorThreshInput').value) || 0.002;
+
+            // Instantiate dynamic background worker
+            const trainingWorker = new Worker(workerUrl);
+            
+            // Post payload arrays across process boundaries
+            trainingWorker.postMessage({
+                dataSet: dataSet,
+                iterations: targetIterations,
+                errorThresh: targetErrorThresh
+            });
+
+            // Handle standard background message streams
+            trainingWorker.onmessage = function(event) {
+                const payload = event.data;
+
+                if (payload.action === 'PROGRESS_TICK') {
+                    const currentIteration = payload.iterations;
+                    const calculatedPercent = Math.min(100, Math.floor((currentIteration / targetIterations) * 100));
+                    
+                    // Live UI Updates without thread lockups
+                    progressBar.style.width = `${calculatedPercent}%`;
+                    progressPercent.innerText = `${calculatedPercent}%`;
+                    progressCount.innerText = `Epochs: ${currentIteration} / ${targetIterations}`;
+                    currentLoss.innerText = `Current Error: ${payload.error.toFixed(6)}`;
+                } 
+                
+                else if (payload.action === 'TRAINING_SUCCESS') {
+                    progressBar.style.width = '100%';
+                    progressPercent.innerText = '100%';
+                    progressCount.innerText = `Completed on Epoch: ${payload.stats.iterations}`;
+                    currentLoss.innerText = `Target Achieved Loss: ${payload.stats.error.toFixed(6)}`;
+                    
+                    // Build local engine instances out of structural representations
+                    activeNetworkModel = new brain.NeuralNetwork();
+                    activeNetworkModel.fromJSON(payload.jsonModel);
                     predictBtn.disabled = false;
 
-                    // Convert model instance configuration into a serializable JSON representation
-                    const rawJson = net.toJSON();
-                    appendLog("Serializing dynamic weight matrices to JSON mapping...");
+                    // Forward payload structure to remote real-time location database endpoints
+                    badge.innerText = "UPLOADING";
+                    badge.className = "bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
+                    firebaseStatus.innerText = "Firebase Sync: Writing matrix...";
 
-                    // Sync out payload structure to Realtime Database endpoint location
-                    badge.innerText = "SYNCING";
-                    badge.className = "bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded text-[10px]";
-                    
-                    set(ref(db, 'models/numeric_model'), {
-                        modelData: rawJson,
-                        meta: {
-                            engine: "brain.js",
-                            type: "NeuralNetwork",
-                            errorTarget: errorThresh,
-                            finalLoss: stats.error,
-                            cyclesCompleted: stats.iterations,
-                            synchronizedAt: new Date().toISOString()
+                    set(ref(db, 'models/probability_model'), {
+                        structuralWeights: payload.jsonModel,
+                        metaInfo: {
+                            archType: "NeuralNetwork (Probability Bounded)",
+                            trainedSamplesCount: dataSet.length,
+                            finalTrainedLoss: payload.stats.error,
+                            totalCyclesRun: payload.stats.iterations,
+                            lastUpdatedDate: new Date().toISOString()
                         }
                     })
                     .then(() => {
-                        appendLog("Data pipeline verification verified: Synced payload cleanly into Firebase Realtime Database.");
-                        badge.innerText = "CONNECTED & SYNCED";
-                        badge.className = "bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[10px]";
+                        firebaseStatus.innerText = "Firebase Sync: Saved Successfully!";
+                        badge.innerText = "SYNCED";
+                        badge.className = "bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
                     })
                     .catch(err => {
-                        appendLog(`Database sync rejected: ${err.message}`);
-                        badge.innerText = "SYNC ERROR";
-                        badge.className = "bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded text-[10px]";
+                        firebaseStatus.innerText = `Firebase Sync Error: ${err.message}`;
+                        badge.innerText = "REMOTE ERROR";
+                        badge.className = "bg-rose-600 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
+                    })
+                    .finally(() => {
+                        trainBtn.disabled = false;
+                        trainingWorker.terminate();
                     });
-
-                } catch (error) {
-                    appendLog(`Runtime execution fault: ${error.message}`);
-                } finally {
+                } 
+                
+                else if (payload.action === 'TRAINING_FAULT') {
+                    alert(`Training routine exception encountered: ${payload.message}`);
                     trainBtn.disabled = false;
+                    badge.innerText = "ERROR";
+                    badge.className = "bg-rose-600 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
+                    trainingWorker.terminate();
                 }
-            }, 50);
+            };
         });
 
-        // Test Handler Evaluation Loop
-        predictBtn.addEventListener('click', () => {
-            if (!trainedModel) return;
-            const targetVal = parseFloat(testInput.value);
-            const evaluation = trainedModel.run([targetVal]);
-            predictionResult.innerText = evaluation[0].toFixed(4);
-            appendLog(`Evaluated local verification pass for input [${targetVal}] -> returned evaluation prediction: [${evaluation[0].toFixed(4)}]`);
+        // Run Inference Calculations 
+        document.getElementById('predictBtn').addEventListener('click', () => {
+            if (!activeNetworkModel) return;
+            
+            const testValA = parseFloat(document.getElementById('testA').value);
+            const testValB = parseFloat(document.getElementById('testB').value);
+            
+            const matrixResult = activeNetworkModel.run([testValA, testValB]);
+            const calculatedProbability = matrixResult[0];
+            
+            // Format probability display output context cleanly
+            document.getElementById('predictionResult').innerText = `${(calculatedProbability * 100).toFixed(1)}%`;
         });
+
+        // Initial View Build Trigger Execution
+        renderDatasetTable();
     </script>
 </body>
 </html>
