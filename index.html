@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain.js + Firebase Training Dashboard</title>
+    <!-- Tailwind CSS for clean layout utility -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Brain.js Browser CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/brain.js@2.0.0-beta.24/browser.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 p-6">
+
+    <div class="max-w-4xl mx-auto space-y-6">
+        <!-- Header -->
+        <header class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+            <h1 class="text-2xl font-bold text-slate-900">Numerical Training Dashboard</h1>
+            <p class="text-slate-500 text-sm">Train a brain.js network locally and automatically sync JSON structures to Firebase Realtime Database.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Left Panel: Configurations & Controls -->
+            <div class="space-y-6 md:col-span-1">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
+                    <h2 class="font-semibold text-lg text-slate-900">Training Configs</h2>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 uppercase">Iterations</label>
+                        <input type="number" id="iterationsInput" value="5000" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 uppercase">Error Threshold</label>
+                        <input type="number" id="errorThreshInput" value="0.005" step="0.001" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <button id="trainBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors cursor-pointer">
+                        Start Training & Sync
+                    </button>
+                </div>
+
+                <!-- Test Evaluation Area -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
+                    <h2 class="font-semibold text-lg text-slate-900">Test Local Model</h2>
+                    <p class="text-xs text-slate-500">Input a value to see what the trained model predicts.</p>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 uppercase">Input Value (Scaled 0-1)</label>
+                        <input type="number" id="testInput" value="0.5" step="0.1" class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <button id="predictBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors cursor-pointer" disabled>
+                        Predict
+                    </button>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <span class="text-xs font-medium text-slate-500 block">Output Result:</span>
+                        <div id="predictionResult" class="text-xl font-bold text-slate-900 mt-1">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Dataset & Live Terminal Output -->
+            <div class="space-y-6 md:col-span-2">
+                <!-- Training Dataset Info -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h2 class="font-semibold text-lg text-slate-900 mb-2">Active Training Set</h2>
+                    <p class="text-xs text-slate-500 mb-3">Formula used below: <code class="bg-slate-100 px-1 py-0.5 rounded">Output = Input * 2</code> (Normalized scales)</p>
+                    <div class="bg-slate-50 p-3 rounded-lg text-xs font-mono text-slate-600 max-h-24 overflow-y-auto">
+                        [<br>
+                        &nbsp;&nbsp;{ input: [0.1], output: [0.2] },<br>
+                        &nbsp;&nbsp;{ input: [0.2], output: [0.4] },<br>
+                        &nbsp;&nbsp;{ input: [0.3], output: [0.6] },<br>
+                        &nbsp;&nbsp;{ input: [0.4], output: [0.8] }<br>
+                        ]
+                    </div>
+                </div>
+
+                <!-- Console / Logger Window -->
+                <div class="bg-slate-900 text-emerald-400 p-4 rounded-xl shadow-inner font-mono text-xs h-80 flex flex-col justify-between">
+                    <div id="consoleLog" class="overflow-y-auto space-y-1 pr-2 flex-1">
+                        <div>&gt; Dashboard ready. Click "Start Training & Sync" to initialize weights...</div>
+                    </div>
+                    <div id="syncStatus" class="mt-2 pt-2 border-t border-slate-800 text-slate-400 flex justify-between items-center">
+                        <span>Firebase Node: /models/numeric_model</span>
+                        <span id="badge" class="bg-slate-800 text-slate-400 px-2 py-0.5 rounded text-[10px]">IDLE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Implementation Layer -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Hardcoded setup profile provided by user
+        const firebaseConfig = {
+            apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
+            authDomain: "test-17881.firebaseapp.com",
+            databaseURL: "https://test-17881-default-rtdb.firebaseio.com",
+            projectId: "test-17881",
+            storageBucket: "test-17881.firebasestorage.app",
+            messagingSenderId: "1057428047643",
+            appId: "1:1057428047643:web:f3801c0d933225a5cd35be",
+            measurementId: "G-65PFSJ1MDS"
+        };
+
+        // Initialize App & Reference DB Instances
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let trainedModel = null;
+
+        // Dom Elements UI References
+        const logger = document.getElementById('consoleLog');
+        const badge = document.getElementById('badge');
+        const trainBtn = document.getElementById('trainBtn');
+        const predictBtn = document.getElementById('predictBtn');
+        const testInput = document.getElementById('testInput');
+        const predictionResult = document.getElementById('predictionResult');
+
+        function appendLog(text) {
+            const row = document.createElement('div');
+            row.innerText = `> ${text}`;
+            logger.appendChild(row);
+            logger.scrollTop = logger.scrollHeight;
+        }
+
+        // Action Routine
+        trainBtn.addEventListener('click', async () => {
+            trainBtn.disabled = true;
+            badge.innerText = "TRAINING";
+            badge.className = "bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px]";
+            appendLog("Initializing Brain.js feedforward architecture...");
+
+            // Setup basic normalized linear data sequence
+            const dataSet = [
+                { input: [0.1], output: [0.2] },
+                { input: [0.2], output: [0.4] },
+                { input: [0.3], output: [0.6] },
+                { input: [0.4], output: [0.8] }
+            ];
+
+            const net = new brain.NeuralNetwork();
+            const iterations = parseInt(document.getElementById('iterationsInput').value) || 5000;
+            const errorThresh = parseFloat(document.getElementById('errorThreshInput').value) || 0.005;
+
+            // Execute training synchronously inside browser window thread
+            setTimeout(() => {
+                try {
+                    const stats = net.train(dataSet, {
+                        iterations: iterations,
+                        errorThresh: errorThresh,
+                        log: true,
+                        logPeriod: Math.max(1, Math.floor(iterations / 10)),
+                        callback: (logData) => {
+                            appendLog(`Iteration: ${logData.iterations} | Current Loss: ${logData.error.toFixed(6)}`);
+                        }
+                    });
+
+                    appendLog(`Training Finished! Achieved error rate: ${stats.error.toFixed(6)} across ${stats.iterations} passes.`);
+                    trainedModel = net;
+                    predictBtn.disabled = false;
+
+                    // Convert model instance configuration into a serializable JSON representation
+                    const rawJson = net.toJSON();
+                    appendLog("Serializing dynamic weight matrices to JSON mapping...");
+
+                    // Sync out payload structure to Realtime Database endpoint location
+                    badge.innerText = "SYNCING";
+                    badge.className = "bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded text-[10px]";
+                    
+                    set(ref(db, 'models/numeric_model'), {
+                        modelData: rawJson,
+                        meta: {
+                            engine: "brain.js",
+                            type: "NeuralNetwork",
+                            errorTarget: errorThresh,
+                            finalLoss: stats.error,
+                            cyclesCompleted: stats.iterations,
+                            synchronizedAt: new Date().toISOString()
+                        }
+                    })
+                    .then(() => {
+                        appendLog("Data pipeline verification verified: Synced payload cleanly into Firebase Realtime Database.");
+                        badge.innerText = "CONNECTED & SYNCED";
+                        badge.className = "bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[10px]";
+                    })
+                    .catch(err => {
+                        appendLog(`Database sync rejected: ${err.message}`);
+                        badge.innerText = "SYNC ERROR";
+                        badge.className = "bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded text-[10px]";
+                    });
+
+                } catch (error) {
+                    appendLog(`Runtime execution fault: ${error.message}`);
+                } finally {
+                    trainBtn.disabled = false;
+                }
+            }, 50);
+        });
+
+        // Test Handler Evaluation Loop
+        predictBtn.addEventListener('click', () => {
+            if (!trainedModel) return;
+            const targetVal = parseFloat(testInput.value);
+            const evaluation = trainedModel.run([targetVal]);
+            predictionResult.innerText = evaluation[0].toFixed(4);
+            appendLog(`Evaluated local verification pass for input [${targetVal}] -> returned evaluation prediction: [${evaluation[0].toFixed(4)}]`);
+        });
+    </script>
+</body>
+</html>
